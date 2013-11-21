@@ -86,6 +86,8 @@ inherits(MtGoxStream, Readable)
 createStream().on('data', function(data){
     try {
         console.log("The buy price of BTC in " + JSON.parse(data).ticker.buy['currency'] +
-            " is " + JSON.parse(data).ticker.buy['value']);
+            " is " + JSON.parse(data).ticker.buy['value'] + " and the sell price is " +
+            JSON.parse(data).ticker.sell['value']
+        );
     } catch (err) {}
 });
