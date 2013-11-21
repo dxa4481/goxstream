@@ -1,17 +1,13 @@
 #!/usr/bin/env node
 
-var Readable  = require('./readable')
+var Readable  = require('stream').Readable
 var Websocket = require('ws')
 var xtend     = require('xtend')
 var inherits  = require('util').inherits
 
-module.exports = {
-    createStream: createStream
-  , currencies: currencies
-}
 
 var defaultOptions = {
-        currency: 'USD'
+        currencies: ['USD', 'LTC']
       , ticker: true
       , depth: false
       , trade: false
@@ -38,8 +34,16 @@ function MtGoxStream(options) {
 
     ws.on('open', function() {
       console.log('connected to:', url)
-      if (options.ticker) subscribe('ticker.BTC' + options.currency)
-      if (options.depth) subscribe('depth.BTC' + options.currency)
+      if (options.ticker){
+          for (var i = 0; i < options.currencies.length; i++) {
+              subscribe('ticker.BTC' + options.currencies[i])
+          }
+      }
+      if (options.depth) {
+          for (var i = 0; i < options.currencies.length; i++) {
+              subscribe('ticker.BTC' + options.currencies[i])
+          }
+      }
       if (options.trade) subscribe('trade.BTC')
       if (options.lag) subscribe('trade.lag')
     })
@@ -77,30 +81,11 @@ function MtGoxStream(options) {
 
 inherits(MtGoxStream, Readable)
 
-function currencies() {
-  return [
-      'USD'
-    , 'AUD'
-    , 'CAD'
-    , 'CHF'
-    , 'CNY'
-    , 'DKK'
-    , 'EUR'
-    , 'GBP'
-    , 'HKD'
-    , 'JPY'
-    , 'NZD'
-    , 'PLN'
-    , 'RUB'
-    , 'SEK'
-    , 'SGD'
-    , 'THB'
-  ]
-}
 
-if (!module.parent) {
-  var usd = new MtGoxStream()
-  usd.pipe(process.stdout)
-  var eur = new MtGoxStream({ currency: 'EUR', ticker: false, depth: true })
-  eur.pipe(require('fs').createWriteStream('EUR'))
-}
+
+createStream().on('data', function(data){
+    try {
+        console.log("currency: " + JSON.parse(data).ticker.buy['currency']);
+        console.log(JSON.parse(data).ticker.buy['value']);
+    } catch (err) {}
+});
